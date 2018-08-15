@@ -11,43 +11,43 @@ class Commands {
     args = args.map(element => element.trim());
     console.log(args);
 
-    switch (cmd) {
-
-      //test command
-      case 'test':
-        message.channel.send('Test Successful');
-        break;
-
-      //help command
-      case 'help':
-        message.author.send('List of available commands:\n!roll <number>: rolls a <number> sided dice');
-        break;
-
-      //dice roll command
-      case 'roll':
-        var dice;
-        if(args[0].length === 0) {
-          dice = 6;
-        } else if(parseInt(args[0])) {
-          dice = parseInt(args[0]);
-        } else {
-          message.channel.send('Invalid argument: expected an integer');
-          break;
-        }
-        var result = Math.floor(Math.random() * dice) + 1;
-        message.channel.send('You rolled a ' + result);
-        break;
-
-      //pick command
-      case 'pick':
-        var choice = Math.floor(Math.random() * args.length);
-        message.channel.send('I pick ' + args[choice]);
-        break;
-
-      default:
-        message.channel.send('Invalid command');
-        break;
+    try {this[cmd](message, args);}
+    catch(err) {
+      message.channel.send('Invalid command');
     }
+  }
+
+  test(message) {
+    message.channel.send('Test Successful');
+  }
+
+  help(message, args) {
+    var cmdSummary = {
+      "roll" : "!roll <number> : rolls a <number> sided dice",
+      "pick" : "!pick <1>, <2>, ... : picks one between all the elements",
+      "kunc" : "!kunc : starts a kunc game"
+    }
+
+    if(cmdSummary[args[0]] === undefined) {
+      message.author.send('List of available commands: !roll, !pick, !kunc\nDetails with !help <command>');
+    }
+
+    else message.author.send(cmdSummary[args[0]]);
+  }
+
+  roll(message, args) {
+    var dice;
+
+    if(args[0].length === 0) {
+      dice = 6;
+    } else if(parseInt(args[0])) {
+      dice = parseInt(args[0]);
+    } else {
+      message.channel.send('Invalid argument: expected an integer');
+    }
+
+    var result = Math.floor(Math.random() * dice) + 1;
+    message.channel.send('You rolled a ' + result);
   }
 
   kunc(kuncSets) {
@@ -56,7 +56,7 @@ class Commands {
     var kuncSpecies = kuncSets[kuncAnswerId][0];
     console.log(kuncSpecies);
     var kuncMoves = [];
-
+  
     for (let i = 0; i < 4; i++) {
       kuncMoves.push(kuncSets[kuncAnswerId][1][i][0]);
     }
