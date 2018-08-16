@@ -1,7 +1,10 @@
+
 class Commands {
-  constructor(message, author) {
-    this.message = message;
-    this.author = author;
+  constructor() {
+    this.kuncSets = require('./kuncSets.json');
+    console.log('Kunc sets loaded');
+    this.kuncStatus = {};
+    this.kuncScores = {};
   }
 
   run(message) {
@@ -13,7 +16,7 @@ class Commands {
 
     try {this[cmd](message, args);}
     catch(err) {
-      message.channel.send('Invalid command');
+      message.channel.send('Invalid command ' + err);
     }
   }
 
@@ -50,20 +53,73 @@ class Commands {
     message.channel.send('You rolled a ' + result);
   }
 
-  kunc(kuncSets) {
-    var kuncAnswerId = Math.floor(Math.random() * 411);
-    console.log(kuncAnswerId);
-    var kuncSpecies = kuncSets[kuncAnswerId][0];
-    console.log(kuncSpecies);
-    var kuncMoves = [];
-  
-    for (let i = 0; i < 4; i++) {
-      kuncMoves.push(kuncSets[kuncAnswerId][1][i][0]);
+  kunc(message, args) {
+    //don't start kunc in a room that's already running kunc
+    if (this.kuncStatus.hasOwnProperty(message.channel.id)) {
+      if(this.kuncStatus[message.channel.id].running) return;
     }
-    kuncMoves = kuncMoves.join(', ');
-    console.log(kuncMoves);
 
-    return {"species": kuncSpecies, "moves": kuncMoves};
+    this.kuncScores[message.channel.id] = {};
+
+    this.kuncGenerator(message);
+  }
+
+  kuncGenerator(message) {
+    var kuncAnswerId = Math.floor(Math.random() * 411);
+    var kuncSpecies = this.kuncSets[kuncAnswerId][0];
+    var kuncMoves = this.kuncSets[kuncAnswerId][1];
+    console.log(kuncSpecies);
+    var kuncQuestion = [];
+
+    for (let i = 0; i < kuncMoves.length; i++) {
+      kuncQuestion.push(kuncMoves[i][0]);
+    }
+    kuncQuestion = kuncQuestion.join(', ');
+    console.log(kuncQuestion);
+
+    var kuncGameState = {
+      "running" : true,
+      "answer" : kuncSpecies,
+      "question" : kuncQuestion,
+    };
+
+    this.kuncStatus[message.channel.id] = kuncGameState;
+
+    message.channel.send(kuncQuestion + '\nUse ``!guess/!g pokemon`` to guess!');
+  }
+
+  g(message, args) {
+    this.guess(message, args);
+  }
+
+  guess(message, args) {
+    //only run if there's a kunc game in the room
+    if (this.kuncStatus.hasOwnProperty(message.channel.id)) {
+      if (this.kuncStatus[message.channel.id].running) {
+        var guess = args[0].toLowerCase();
+        if(guess === this.kuncStatus[message.channel.id].answer.toLowerCase()) {
+
+          if(this.kuncScores[message.channel.id].hasOwnProperty(message.author)) {
+            this.kuncScores[message.channel.id][message.author]++;
+          } else {
+            this.kuncScores[message.channel.id][message.author] = 1;
+          }
+
+          message.channel.send(message.author + ' got it right and has **' + this.kuncScores[message.channel.id][message.author] + '** point(s)! It was ' + this.kuncStatus[message.channel.id].answer + '!');
+
+          if(this.kuncScores[message.channel.id][message.author] === 5) {
+            message.channel.send('Game Over! ' + message.author + 'won!');
+            this.kuncStatus[message.channel.id].running = false;
+          } else {
+            this.kuncGenerator(message);
+          }
+        }
+      } else {
+        message.channel.send('No kunc game running');
+      }
+    } else {
+      message.channel.send('No kunc game running');
+    }
   }
 }
 
