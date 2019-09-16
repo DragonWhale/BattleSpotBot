@@ -18,7 +18,7 @@ class Commands {
 
     try {this[cmd](message, args);}
     catch(err) {
-      message.channel.send('Invalid command');
+      message.channel.send('Invalid command. ' + err);
     }
   }
 
@@ -131,6 +131,50 @@ class Commands {
   }
 
   tourstats(message, args) {
+    if(args[0] === 'help') {
+      message.channel.send('``tourstats <Pokemon>, <Generation (default 7)>, <Singles = 1/Doubles = 2 (default 1)>\nDisplays stats of Pokemon from official Battle Spot matches.``');
+    }
+
+    var pokemon = args[0];
+    var format = '';
+
+    switch (args[1]) {
+      case '5':
+      format = 'gbuSingles';
+      case '6':
+      switch (args[2]) {
+        case '1':
+        format = 'orasSingles';
+        case '2':
+        format = 'orasDoubles';
+        break;
+        default: format = 'orasSingles';
+      }
+      case '7':
+      switch (args[2]) {
+        case '1':
+        format = 'smSingles';
+        case '2':
+        format = 'smDoubles';
+        break;
+        default: format = 'smSingles';
+      }
+      break;
+      default: format = 'smSingles';
+    }
+
+    //check if Pokemon was used in the format
+    if(Object.keys(this.tourData[format]).findIndex(key => key.toLowerCase() === pokemon.toLowerCase()) === -1) {
+      message.channel.send('This Pokemon was not used in an official match of ' + format + '.');
+      return;
+    }
+
+    var pokeObj = this.tourData[format][pokemon];
+
+    message.channel.send('```Pokemon: ' + pokeObj.name + '    Format: ' + format + '\nRank: ' + pokeObj.rank + '\nUsage: ' + pokeObj.count + ' (' + pokeObj.usage + ')   Wins: ' + pokeObj.win + ' (' + pokeObj.winPercent + ')\nBrought: ' + pokeObj.bring + ' (' + pokeObj.bringPercent + ')   Wins: ' + pokeObj.bringWin + ' (' + pokeObj.bringWinPercent + ')```');
+
+
+
 
   }
 }
