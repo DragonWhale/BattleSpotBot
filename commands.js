@@ -3,6 +3,8 @@ class Commands {
   constructor() {
     this.kuncSets = require('./kuncSets.json');
     console.log('Kunc sets loaded');
+    this.tourData = require('./tourData.json');
+    console.log('Tour Data loaded');
     this.kuncStatus = {};
     this.kuncScores = {};
   }
@@ -16,7 +18,7 @@ class Commands {
 
     try {this[cmd](message, args);}
     catch(err) {
-      message.channel.send('Invalid command ' + err);
+      message.channel.send('Invalid command');
     }
   }
 
@@ -65,6 +67,12 @@ class Commands {
   }
 
   kuncGenerator(message) {
+    //ignore if it's called directly
+    if(message.content.startsWith('!kuncGenerator')) {
+      message.channel.send('Invalid command');
+      return;
+    }
+
     var kuncAnswerId = Math.floor(Math.random() * 411);
     var kuncSpecies = this.kuncSets[kuncAnswerId][0];
     var kuncMoves = this.kuncSets[kuncAnswerId][1];
@@ -120,6 +128,10 @@ class Commands {
     } else {
       message.channel.send('No kunc game running');
     }
+  }
+
+  tourstats(message, args) {
+
   }
 }
 
